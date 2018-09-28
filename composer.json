@@ -1,0 +1,25 @@
+{
+  "name": "codedmonkey/jenkins",
+  "description": "Provides an object-oriented interface to connect with a Jenkins installation",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Tim Goudriaan",
+      "email": "tim@codedmonkey.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "CodedMonkey\\Jenkins\\": "source/"
+    }
+  },
+  "require": {
+    "php": "^7.1",
+    "ext-json": "*",
+    "php-http/client-implementation": "^1.0"
+  },
+  "require-dev": {
+    "php-http/mock-client": "^1.0"
+  },
+  "minimum-stability": "stable"
+}
