@@ -24,9 +24,19 @@ class Job
         return $this->data['displayName'];
     }
 
+    public function getFullDisplayName()
+    {
+        return $this->data['fullDisplayName'];
+    }
+
     public function getName()
     {
         return $this->data['name'];
+    }
+
+    public function getFullName()
+    {
+        return $this->data['fullName'];
     }
 
     public function getDescription()
