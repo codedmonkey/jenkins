@@ -5,31 +5,30 @@
 
 namespace CodedMonkey\Jenkins\Model\Job;
 
+use CodedMonkey\Jenkins\Client\JobClient;
 use CodedMonkey\Jenkins\Jenkins;
 
 class AbstractJob
 {
-    private $client;
+    private $jenkins;
     private $data;
-
     private $initialized;
 
-    public function __construct(array $data, bool $initialized = false, Jenkins $client = null)
+    public function __construct(Jenkins $jenkins, array $data, bool $initialized = false)
     {
+        $this->jenkins = $jenkins;
         $this->data = $data;
         $this->initialized = $initialized;
-
-        $this->client = $client;
     }
 
     public function getDisplayName()
     {
-        return $this->data['displayName'];
+        return $this->getData('displayName');
     }
 
     public function getFullDisplayName()
     {
-        return $this->data['fullDisplayName'];
+        return $this->getData('fullDisplayName');
     }
 
     public function getName()
@@ -44,11 +43,36 @@ class AbstractJob
 
     public function getDescription()
     {
-        return $this->data['description'];
+        return $this->getData('description');
     }
 
     public function getUrl()
     {
-        return $this->data['url'];
+        return $this->getData('url');
+    }
+
+    protected function getData(string $name)
+    {
+        if (isset($this->data[$name])) {
+            return $this->data[$name];
+        }
+
+        if (!$this->initialized) {
+            $this->initialize();
+        }
+
+        return $this->data[$name];
+    }
+
+    protected function initialize(): void
+    {
+        if ($this->initialized) {
+            return;
+        }
+
+        $data = $this->jenkins->jobs->get($this->data['name'], JobClient::RETURN_RESPONSE);
+
+        $this->data = $data;
+        $this->initialized = true;
     }
 }

@@ -7,21 +7,20 @@ namespace CodedMonkey\Jenkins\Model;
 
 use CodedMonkey\Jenkins\Exception\RuntimeException;
 use CodedMonkey\Jenkins\Jenkins;
+use CodedMonkey\Jenkins\Model\Job\FolderJob;
 use CodedMonkey\Jenkins\Model\Job\FreestyleJob;
+use CodedMonkey\Jenkins\Model\Job\Job;
 
 class JobFactory
 {
-    /**
-     * @var Jenkins
-     */
-    private $client;
+    private $jenkins;
 
-    public function __construct(Jenkins $client)
+    public function __construct(Jenkins $jenkins)
     {
-        $this->client = $client;
+        $this->jenkins = $jenkins;
     }
 
-    public function create(array $data)
+    public function create(array $data, bool $initialized = false)
     {
         $type = $data['_class'] ?? false;
 
@@ -34,12 +33,8 @@ class JobFactory
             'com.cloudbees.hudson.plugins.folder.Folder' => FolderJob::class,
         ];
 
-        $class = $typeMap[$type] ?? false;
+        $class = $typeMap[$type] ?? Job::class;
 
-        if (!$class) {
-            throw new RuntimeException(sprintf('Unknown job type "%s".', $type));
-        }
-
-        return new $class($data, $this->client);
+        return new $class($this->jenkins, $data, $initialized);
     }
 }

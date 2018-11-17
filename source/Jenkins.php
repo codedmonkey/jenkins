@@ -5,52 +5,63 @@
 
 namespace CodedMonkey\Jenkins;
 
-use CodedMonkey\Jenkins\Model\Job;
-use CodedMonkey\Jenkins\Model\JobFactory;
+use CodedMonkey\Jenkins\Client\JobClient;
+use Http\Client\HttpClient;
 use Http\Discovery\HttpClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
+use Http\Message\MessageFactory;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * @property JobClient $jobs
+ */
 class Jenkins
 {
+    private static $clientClasses = [
+        'jobs' => JobClient::class,
+    ];
+
     private $httpClient;
     private $requestFactory;
 
-    private $jobFactory;
-
     private $url;
+    private $clients = [];
 
-    public function __construct(string $url, $httpClient = null, $requestFactory = null)
+    public function __construct(string $url, HttpClient $httpClient = null, MessageFactory $requestFactory = null)
     {
         $this->url = $url;
         $this->httpClient = $httpClient ?: HttpClientDiscovery::find();
         $this->requestFactory = $requestFactory ?: MessageFactoryDiscovery::find();
-
-        $this->jobFactory = new JobFactory($this);
     }
 
-    public function setJobFactory($factory): self
+    public function __get($name)
     {
-        $this->jobFactory = $factory;
-
-        return $this;
+        return $this->getClient($name);
     }
 
-    public function getJob(string $name)
+    private function getClient($name)
     {
-        if (strpos($name, '/') && !strpos($name, '/job/')) {
-            $name = str_replace('/', '/job/', $name);
+        if (!isset($this->clients[$name])) {
+            if (!isset(self::$clientClasses[$name])) {
+                throw new \Exception(sprintf('Unknown API client "%s".'. $name));
+            }
+
+            $this->clients[$name] = new self::$clientClasses[$name]($this, $this->httpClient, $this->requestFactory);
         }
-        $url = sprintf('%s/job/%s/api/json', $this->url, $name);
+
+        return $this->clients[$name];
+    }
+
+    public function request(string $url): string
+    {
+        $url = $this->url . '/' . $url;
 
         $request = $this->requestFactory->createRequest('get', $url);
         $response = $this->httpClient->sendRequest($request);
 
         $this->validateResponse($response);
 
-        $data = json_decode($response->getBody(), true);
-
-        return new Job($data);
+        return $response->getBody();
     }
 
     private function validateResponse(ResponseInterface $response): void
