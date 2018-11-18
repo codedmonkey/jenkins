@@ -6,6 +6,7 @@
 namespace CodedMonkey\Jenkins;
 
 use CodedMonkey\Jenkins\Client\JobClient;
+use CodedMonkey\Jenkins\Exception\TransferException;
 use Http\Client\HttpClient;
 use Http\Discovery\HttpClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
@@ -70,6 +71,6 @@ class Jenkins
             return;
         }
 
-        throw new \RuntimeException;
+        throw new TransferException($response->getReasonPhrase());
     }
 }
