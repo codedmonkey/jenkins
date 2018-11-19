@@ -65,6 +65,20 @@ class Jenkins
         return $response->getBody();
     }
 
+    public function post(string $url, string $body, array $options = []): string
+    {
+        $url = $this->url . '/' . $url;
+
+        $headers = $options['headers'] ?? [];
+
+        $request = $this->requestFactory->createRequest('post', $url, $headers, $body);
+        $response = $this->httpClient->sendRequest($request);
+
+        $this->validateResponse($response);
+
+        return $response->getBody();
+    }
+
     private function validateResponse(ResponseInterface $response): void
     {
         if ($response->getStatusCode() < 400 || $response->getStatusCode() > 600) {

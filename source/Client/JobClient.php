@@ -23,6 +23,36 @@ class JobClient extends AbstractClient
         $this->jobFactory = new JobFactory($jenkins);
     }
 
+    public function create(string $name, string $configuration)
+    {
+        $url = sprintf('createItem?name=%s', $name);
+
+        $options = [
+            'headers' => [
+                'Content-Type' => 'application/xml',
+            ],
+        ];
+
+        $data = $this->jenkins->post($url, $configuration, $options);
+
+        return $data;
+    }
+
+    public function update(string $name, string $configuration)
+    {
+        $url = sprintf('job/%s/config.xml', $name);
+
+        $options = [
+            'headers' => [
+                'Content-Type' => 'application/xml',
+            ],
+        ];
+
+        $data = $this->jenkins->post($url, $configuration, $options);
+
+        return $data;
+    }
+
     public function get(string $name, $flags = 0)
     {
         $name = str_replace('/', '/job/', $name);
