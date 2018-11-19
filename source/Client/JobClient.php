@@ -6,13 +6,14 @@
 namespace CodedMonkey\Jenkins\Client;
 
 use CodedMonkey\Jenkins\Jenkins;
+use CodedMonkey\Jenkins\Model\Job\FolderJob;
 use CodedMonkey\Jenkins\Model\JobFactory;
 
 class JobClient extends AbstractClient
 {
     const RETURN_RESPONSE = 1;
     const INITIALIZE_JOBS = 2;
-    const RESOLVE_FOLDERS = 3;
+    const RESOLVE_FOLDERS = 4;
 
     private $jobFactory;
 
@@ -23,8 +24,9 @@ class JobClient extends AbstractClient
         $this->jobFactory = new JobFactory($jenkins);
     }
 
-    public function create(string $name, string $configuration)
+    public function create(string $name, ?string $folder, string $configuration)
     {
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
         $url = sprintf('createItem?name=%s', $name);
 
         $options = [
@@ -33,14 +35,15 @@ class JobClient extends AbstractClient
             ],
         ];
 
-        $data = $this->jenkins->post($url, $configuration, $options);
+        $data = $this->jenkins->post($urlPrefix . $url, $configuration, $options);
 
         return $data;
     }
 
-    public function update(string $name, string $configuration)
+    public function update(string $name, ?string $folder, string $configuration)
     {
-        $url = sprintf('job/%s/config.xml', $name);
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $url = $this->getApiPath($name) . 'config.xml';
 
         $options = [
             'headers' => [
@@ -48,17 +51,17 @@ class JobClient extends AbstractClient
             ],
         ];
 
-        $data = $this->jenkins->post($url, $configuration, $options);
+        $data = $this->jenkins->post($urlPrefix . $url, $configuration, $options);
 
         return $data;
     }
 
-    public function get(string $name, $flags = 0)
+    public function get(string $name, ?string $folder = null, $flags = 0)
     {
-        $name = str_replace('/', '/job/', $name);
-        $url = sprintf('job/%s/api/json', $name);
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $url = $this->getApiPath($name) . 'api/json';
 
-        $data = $this->jenkins->request($url);
+        $data = $this->jenkins->request($urlPrefix . $url);
         $data = json_decode($data, true);
 
         if ($flags & self::RETURN_RESPONSE) {
@@ -68,9 +71,12 @@ class JobClient extends AbstractClient
         return $this->jobFactory->create($data, true);
     }
 
-    public function all(string $folder = null, $flags = 0)
+    public function all(?string $folder = null, $flags = 0)
     {
-        $data = $this->jenkins->request('api/json?tree=jobs[_class,name,fullName]');
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $url = 'api/json?tree=jobs[_class,name,fullName]';
+
+        $data = $this->jenkins->request($urlPrefix . $url);
         $data = json_decode($data, true);
 
         if ($flags & self::RETURN_RESPONSE) {
@@ -83,13 +89,32 @@ class JobClient extends AbstractClient
             $initialized = false;
 
             if ($flags & self::INITIALIZE_JOBS) {
-                $jobData = $this->get($jobData['fullName'], self::RETURN_RESPONSE);
+                $jobData = $this->get($jobData['name'], $folder,self::RETURN_RESPONSE);
                 $initialized = true;
             }
 
-            $jobs[] = $this->jobFactory->create($jobData, $initialized);
+            $job = $this->jobFactory->create($jobData, $initialized);
+
+            if ($job instanceof FolderJob && $flags & self::RESOLVE_FOLDERS) {
+                $nestedJobs = $this->all($job->getFullName(), $flags);
+
+                // Append the nested jobs and avoid adding the folder as a job
+                array_push($jobs, ...$nestedJobs);
+                continue;
+            }
+
+            $jobs[] = $job;
         }
 
         return $jobs;
+    }
+
+    private function getApiPath(string $job)
+    {
+        $parts = explode('/', $job);
+
+        return implode('', array_map(function($part) {
+            return sprintf('job/%s/', $part);
+        }, $parts));
     }
 }

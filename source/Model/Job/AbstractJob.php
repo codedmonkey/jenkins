@@ -10,9 +10,9 @@ use CodedMonkey\Jenkins\Jenkins;
 
 class AbstractJob
 {
-    private $jenkins;
-    private $data;
-    private $initialized;
+    protected $jenkins;
+    protected $data;
+    protected $initialized;
 
     public function __construct(Jenkins $jenkins, array $data, bool $initialized = false)
     {
