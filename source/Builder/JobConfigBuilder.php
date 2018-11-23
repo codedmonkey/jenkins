@@ -5,6 +5,9 @@
 
 namespace CodedMonkey\Jenkins\Builder;
 
+use CodedMonkey\Jenkins\Builder\Dumper\AbstractJobConfigDumper;
+use CodedMonkey\Jenkins\Builder\Dumper\FolderJobConfigDumper;
+use CodedMonkey\Jenkins\Builder\Dumper\FreestyleJobConfigDumper;
 use CodedMonkey\Jenkins\Exception\BuilderException;
 
 class JobConfigBuilder
@@ -17,6 +20,7 @@ class JobConfigBuilder
     private $displayName;
     private $description;
     private $disabled = false;
+    private $parameters = [];
     private $triggers = [];
     private $builders = [];
 
@@ -48,6 +52,13 @@ class JobConfigBuilder
         return $this;
     }
 
+    public function addParameter(string $name, string $type = 'string', ?string $defaultValue = null, ?string $description = null): self
+    {
+        $this->parameters[] = [$type, $name, $description, $defaultValue];
+
+        return $this;
+    }
+
     public function addTimedTrigger(string $cron): self
     {
         $this->triggers[] = ['timed', $cron];
@@ -64,96 +75,25 @@ class JobConfigBuilder
 
     public function buildConfig()
     {
-        $dom = new \DOMDocument('1.1', 'UTF-8');
+        static $typeMap = [
+            self::TYPE_FREESTYLE => FreestyleJobConfigDumper::class,
+            self::TYPE_FOLDER => FolderJobConfigDumper::class,
+        ];
 
-        $dom->formatOutput = true;
-
-        $rootNode = $this->buildRootNode($dom);
-        $dom->appendChild($rootNode);
-
-        if (null !== $this->displayName) {
-            $displayNameNode = $dom->createElement('displayName', $this->displayName);
-            $rootNode->appendChild($displayNameNode);
+        if (!isset($typeMap[$this->type])) {
+            throw new BuilderException('Invalid job type');
         }
 
-        if (null !== $this->description) {
-            $descriptionNode = $dom->createElement('description', $this->description);
-            $rootNode->appendChild($descriptionNode);
-        }
+        /** @var AbstractJobConfigDumper $dumper */
+        $dumper = new $typeMap[$this->type];
 
-        // todo does not appear in folders
-        $disabledNode = $dom->createElement('disabled', $this->disabled ? 'true' : 'false');
-        $rootNode->appendChild($disabledNode);
+        $dumper->buildDisplayNameNode($this->displayName);
+        $dumper->buildDescriptionNode($this->description);
+        $dumper->buildDisabledNode($this->disabled);
+        $dumper->buildParametersNode($this->parameters);
+        $dumper->buildTriggersNode($this->triggers);
+        $dumper->buildBuildersNode($this->builders);
 
-        if (count($this->triggers)) {
-            $triggersNode = $dom->createElement('triggers');
-            $rootNode->appendChild($triggersNode);
-
-            foreach ($this->triggers as $trigger) {
-                $triggerNode = $this->buildTriggerNode($trigger, $dom);
-
-                $triggersNode->appendChild($triggerNode);
-            }
-        }
-
-        if (count($this->builders)) {
-            $buildersNode = $dom->createElement('builders');
-            $rootNode->appendChild($buildersNode);
-
-            foreach ($this->builders as $builder) {
-                $builderNode = $this->buildBuilderNode($builder, $dom);
-
-                $buildersNode->appendChild($builderNode);
-            }
-        }
-
-        return $dom->saveXML();
-    }
-
-    private function buildRootNode(\DOMDocument $dom)
-    {
-        switch ($this->type) {
-            case self::TYPE_FOLDER:
-                $node = $dom->createElement('com.cloudbees.hudson.plugins.folder.Folder');
-                $node->setAttribute('plugin', 'cloudbees-folder@6.6');
-
-                return $node;
-
-            case self::TYPE_FREESTYLE:
-            default:
-                return $dom->createElement('project');
-        }
-    }
-
-    private function buildTriggerNode($trigger, \DOMDocument $dom)
-    {
-        switch ($trigger[0]) {
-            case 'timed':
-                $node = $dom->createElement('hudson.triggers.TimerTrigger');
-
-                $specificationNode = $dom->createElement('spec', $trigger[1]);
-                $node->appendChild($specificationNode);
-
-                return $node;
-
-            default:
-                throw new BuilderException(sprintf('Invalid trigger type: %s', $trigger[0]));
-        }
-    }
-
-    private function buildBuilderNode($builder, \DOMDocument $dom)
-    {
-        switch ($builder[0]) {
-            case 'shell':
-                $node = $dom->createElement('hudson.tasks.Shell');
-
-                $commandNode = $dom->createElement('command', $builder[1]);
-                $node->appendChild($commandNode);
-
-                return $node;
-
-            default:
-                throw new BuilderException(sprintf('Invalid builder type: %s', $builder[0]));
-        }
+        return $dumper->dump();
     }
 }
