@@ -144,4 +144,87 @@ abstract class AbstractJobConfigDumper
                 throw new BuilderException(sprintf('Invalid builder type: %s', $builder[0]));
         }
     }
+
+    public function buildPublishersNode(array $publishers): void
+    {
+        $node = $this->dom->createElement('publishers');
+        $this->rootNode->appendChild($node);
+
+        foreach ($publishers as $publisher) {
+            $this->buildPublisherNode($node, $publisher);
+        }
+    }
+
+    public function buildPublisherNode(\DOMElement $parent, $publisher): void
+    {
+        switch ($publisher[0]) {
+            case 'workspace-cleanup':
+                $node = $this->dom->createElement('hudson.plugins.ws__cleanup.WsCleanup');
+                $node->setAttribute('plugin', 'ws-cleanup');
+                $parent->appendChild($node);
+
+                $patterns = array_merge(
+                    array_map(function($pattern) {
+                        return ['include', $pattern];
+                    }, $publisher[3][0]),
+                    array_map(function($pattern) {
+                        return ['exclude', $pattern];
+                    }, $publisher[3][1])
+                );
+
+                if (count($patterns) > 0) {
+                    $patternsNode = $this->dom->createElement('patterns');
+                    $node->appendChild($patternsNode);
+
+                    foreach ($patterns as $pattern) {
+                        $patternNode = $this->dom->createElement('hudson.plugins.ws__cleanup.Pattern');
+                        $patternsNode->appendChild($patternNode);
+
+                        $patternTextNode = $this->dom->createElement('pattern', $pattern[0]);
+                        $patternNode->appendChild($patternTextNode);
+
+                        $patternTypeNode = $this->dom->createElement('type', strtoupper($pattern[1]));
+                        $patternNode->appendChild($patternTypeNode);
+                    }
+                }
+                else {
+                    $patternsNode = $this->dom->createElement('patterns');
+                    $patternsNode->setAttribute('class', 'empty-list');
+                    $node->appendChild($patternsNode);
+                }
+
+                $deleteDirectoriesNode = $this->dom->createElement('deleteDirs', $publisher[4] ? 'true' : 'false');
+                $node->appendChild($deleteDirectoriesNode);
+
+                // todo make configurable
+                $skipNode = $this->dom->createElement('skipWhenFailed', 'false');
+                $node->appendChild($skipNode);
+
+                static $buildStates = ['success', 'unstable', 'failure', 'notBuilt', 'aborted'];
+
+                foreach ($buildStates as $buildState) {
+                    $clean = $publisher[1][$buildState] ?? true;
+
+                    $cleanNode = $this->dom->createElement(sprintf('cleanWhen%s', ucfirst($buildState)), $clean ? 'true' : 'false');
+                    $node->appendChild($cleanNode);
+                }
+
+                $failNode = $this->dom->createElement('notFailBuild', $publisher[2] ? 'false' : 'true');
+                $node->appendChild($failNode);
+
+                $cleanupParentNode = $this->dom->createElement('cleanupMatrixParent', $publisher[5] ? 'true' : 'false');
+                $node->appendChild($cleanupParentNode);
+
+                $externalCommandNode = $this->dom->createElement('externalDelete', $publisher[7]);
+                $node->appendChild($externalCommandNode);
+
+                $deferredWipeoutNode = $this->dom->createElement('notFailBuild', $publisher[6] ? 'false' : 'true');
+                $node->appendChild($deferredWipeoutNode);
+
+                break;
+
+            default:
+                throw new BuilderException(sprintf('Invalid publisher type: %s', $publisher[0]));
+        }
+    }
 }

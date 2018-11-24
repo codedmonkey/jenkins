@@ -23,6 +23,7 @@ class JobConfigBuilder
     private $parameters = [];
     private $triggers = [];
     private $builders = [];
+    private $publishers = [];
 
     public function setType(string $type): self
     {
@@ -73,6 +74,39 @@ class JobConfigBuilder
         return $this;
     }
 
+    /**
+     * Cleans up the job's workspace through the Workspace Cleanup Plugin
+     *
+     * @param array       $includePatterns  List of files to be removed
+     * @param array       $excludePatterns  List of files to keep intact
+     * @param array       $cleanWhen        Clean the directory depending on the build state: success, unstable, failure, notBuilt or aborted (defaults to true)
+     * @param bool        $matchDirectories Apply directories on directories (defaults to false)
+     * @param bool        $failBuild        Fail build when cleanup fails (defaults to false)
+     * @param bool        $cleanupParent    Cleanup matrix parent workspace (defaults to false)
+     * @param string|null $externalCommand  External command to cleanup workspace
+     * @param bool        $deferredWipeout  Use deferred wipeout (defaults to true)
+     *
+     * @return JobConfigBuilder
+     */
+    public function addWorkspaceCleanupPublisher(array $includePatterns = [], array $excludePatterns = [], array $cleanWhen = [], bool $matchDirectories = false, bool $failBuild = false, bool $cleanupParent = false, ?string $externalCommand = null, bool $deferredWipeout = true): self
+    {
+        $this->publishers[] = [
+            'workspace-cleanup',
+            $cleanWhen,
+            $failBuild,
+            [
+                $includePatterns,
+                $excludePatterns,
+            ],
+            $matchDirectories,
+            $cleanupParent,
+            $deferredWipeout,
+            $externalCommand,
+        ];
+
+        return $this;
+    }
+
     public function buildConfig()
     {
         static $typeMap = [
@@ -93,6 +127,7 @@ class JobConfigBuilder
         $dumper->buildParametersNode($this->parameters);
         $dumper->buildTriggersNode($this->triggers);
         $dumper->buildBuildersNode($this->builders);
+        $dumper->buildPublishersNode($this->publishers);
 
         return $dumper->dump();
     }

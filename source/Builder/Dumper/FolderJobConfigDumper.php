@@ -48,4 +48,14 @@ class FolderJobConfigDumper extends AbstractJobConfigDumper
     {
 
     }
+
+    public function buildPublishersNode(array $publishers): void
+    {
+
+    }
+
+    public function buildPublisherNode(\DOMElement $parent, $publisher): void
+    {
+
+    }
 }
