@@ -80,7 +80,7 @@ class JobConfigBuilder
      * @param array       $includePatterns  List of files to be removed
      * @param array       $excludePatterns  List of files to keep intact
      * @param array       $cleanWhen        Clean the directory depending on the build state: success, unstable, failure, notBuilt or aborted (defaults to true)
-     * @param bool        $matchDirectories Apply directories on directories (defaults to false)
+     * @param bool        $matchDirectories Apply patterns on directories (defaults to false)
      * @param bool        $failBuild        Fail build when cleanup fails (defaults to false)
      * @param bool        $cleanupParent    Cleanup matrix parent workspace (defaults to false)
      * @param string|null $externalCommand  External command to cleanup workspace
