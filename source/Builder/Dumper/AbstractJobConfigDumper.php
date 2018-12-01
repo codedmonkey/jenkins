@@ -53,6 +53,10 @@ abstract class AbstractJobConfigDumper
 
     public function buildParametersNode(array $parameters): void
     {
+        if (0 === count($parameters)) {
+            return;
+        }
+
         $propertiesNode = $this->dom->createElement('properties');
         $this->rootNode->appendChild($propertiesNode);
 
