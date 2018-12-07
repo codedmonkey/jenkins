@@ -6,6 +6,7 @@
 namespace CodedMonkey\Jenkins\Model\Job;
 
 use CodedMonkey\Jenkins\Client\JobClient;
+use CodedMonkey\Jenkins\Exception\RuntimeException;
 use CodedMonkey\Jenkins\Jenkins;
 
 class AbstractJob
@@ -51,6 +52,13 @@ class AbstractJob
         return $this->getData('url');
     }
 
+    public function refresh(): void
+    {
+        $data = $this->jenkins->jobs->get($this->data['name'], JobClient::RETURN_RESPONSE);
+
+        $this->data = $data;
+    }
+
     protected function getData(string $name)
     {
         if (isset($this->data[$name])) {
@@ -59,6 +67,10 @@ class AbstractJob
 
         if (!$this->initialized) {
             $this->initialize();
+        }
+
+        if (!isset($this->data[$name])) {
+            throw new RuntimeException(sprintf('Invalid field: %s', $name));
         }
 
         return $this->data[$name];
@@ -70,9 +82,7 @@ class AbstractJob
             return;
         }
 
-        $data = $this->jenkins->jobs->get($this->data['name'], JobClient::RETURN_RESPONSE);
-
-        $this->data = $data;
+        $this->refresh();
         $this->initialized = true;
     }
 }

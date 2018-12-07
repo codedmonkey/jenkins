@@ -11,11 +11,14 @@ use CodedMonkey\Jenkins\Model\JobFactory;
 
 class JobClient extends AbstractClient
 {
-    const RETURN_RESPONSE = 1;
-    const INITIALIZE_JOBS = 2;
-    const RESOLVE_FOLDERS = 4;
+    const FORCE_FETCH = 1;
+    const RETURN_RESPONSE = 2;
+    const INITIALIZE_JOBS = 4;
+    const RESOLVE_FOLDERS = 8;
 
     private $jobFactory;
+    private $jobs = [];
+    private $folders = [];
 
     public function __construct(Jenkins $jenkins)
     {
@@ -58,6 +61,10 @@ class JobClient extends AbstractClient
 
     public function get(string $name, ?string $folder = null, $flags = 0)
     {
+        if ($flags ^ self::FORCE_FETCH && isset($this->jobs[$folder][$name])) {
+            return $this->jobs[$folder][$name];
+        }
+
         $urlPrefix = $folder ? $this->getApiPath($folder) : null;
         $url = $this->getApiPath($name) . 'api/json';
 
@@ -68,11 +75,17 @@ class JobClient extends AbstractClient
             return $data;
         }
 
-        return $this->jobFactory->create($data, true);
+        $job = $this->jobFactory->create($data, true);
+
+        return $this->jobs[$folder][$name] = $job;
     }
 
     public function all(?string $folder = null, $flags = 0)
     {
+        if ($flags ^ self::FORCE_FETCH && isset($this->folders[$folder])) {
+            return $this->jobs[$folder];
+        }
+
         $urlPrefix = $folder ? $this->getApiPath($folder) : null;
         $url = 'api/json?tree=jobs[_class,name,fullName]';
 
@@ -86,14 +99,12 @@ class JobClient extends AbstractClient
         $jobs = [];
 
         foreach ($data['jobs'] as $jobData) {
-            $initialized = false;
+            $name = $jobData['name'];
+            $job = $this->jobs[$folder][$name] ?? $this->jobFactory->create($jobData);
 
             if ($flags & self::INITIALIZE_JOBS) {
-                $jobData = $this->get($jobData['name'], $folder,self::RETURN_RESPONSE);
-                $initialized = true;
+                $job->initialize();
             }
-
-            $job = $this->jobFactory->create($jobData, $initialized);
 
             if ($job instanceof FolderJob && $flags & self::RESOLVE_FOLDERS) {
                 $nestedJobs = $this->all($job->getFullName(), $flags);
@@ -103,8 +114,10 @@ class JobClient extends AbstractClient
                 continue;
             }
 
-            $jobs[] = $job;
+            $this->jobs[$folder][$name] = $jobs[] = $job;
         }
+
+        $this->folders[$folder] = true;
 
         return $jobs;
     }
