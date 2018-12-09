@@ -75,6 +75,7 @@ abstract class AbstractJobConfigDumper
     {
         static $typeMap = [
             'password' => 'hudson.model.PasswordParameterDefinition',
+            'string' => 'hudson.model.StringParameterDefinition',
         ];
 
         if (!isset($typeMap[$parameter[0]])) {
