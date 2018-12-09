@@ -38,9 +38,7 @@ class JobClient extends AbstractClient
             ],
         ];
 
-        $data = $this->jenkins->post($urlPrefix . $url, $configuration, $options);
-
-        return $data;
+        $this->jenkins->post($urlPrefix . $url, $configuration, $options);
     }
 
     public function update(string $name, ?string $folder, string $configuration)
@@ -54,9 +52,7 @@ class JobClient extends AbstractClient
             ],
         ];
 
-        $data = $this->jenkins->post($urlPrefix . $url, $configuration, $options);
-
-        return $data;
+        $this->jenkins->post($urlPrefix . $url, $configuration, $options);
     }
 
     public function get(string $name, ?string $folder = null, $flags = 0)
@@ -120,6 +116,16 @@ class JobClient extends AbstractClient
         $this->folders[$folder] = true;
 
         return $jobs;
+    }
+
+    public function getConfig(string $name, ?string $folder = null, $flags = 0)
+    {
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $url = $this->getApiPath($name) . 'config.xml';
+
+        $data = $this->jenkins->request($urlPrefix . $url);
+
+        return $data;
     }
 
     private function getApiPath(string $job)

@@ -12,6 +12,8 @@ use CodedMonkey\Jenkins\Jenkins;
 class AbstractJob
 {
     protected $jenkins;
+
+    protected $config;
     protected $data;
     protected $initialized;
 
@@ -52,11 +54,15 @@ class AbstractJob
         return $this->getData('url');
     }
 
-    public function refresh(): void
+    public function getConfig()
     {
-        $data = $this->jenkins->jobs->get($this->data['name'], JobClient::RETURN_RESPONSE);
+        if ($this->config) {
+            return $this->config;
+        }
 
-        $this->data = $data;
+        $this->config = $this->jenkins->jobs->getConfig($this->getFullName());
+
+        return $this->config;
     }
 
     protected function getData(string $name)
@@ -74,6 +80,13 @@ class AbstractJob
         }
 
         return $this->data[$name];
+    }
+
+    public function refresh(): void
+    {
+        $data = $this->jenkins->jobs->get($this->data['fullName'], null, JobClient::RETURN_RESPONSE);
+
+        $this->data = $data;
     }
 
     protected function initialize(): void
