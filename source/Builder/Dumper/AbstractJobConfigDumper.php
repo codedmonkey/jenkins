@@ -33,9 +33,10 @@ abstract class AbstractJobConfigDumper
         $this->dom->appendChild($this->rootNode);
     }
 
-    public function buildDisplayNameNode(?string $displayName): void
+    public function buildActionsNode(): void
     {
-        $node = $this->dom->createElement('displayName', $displayName);
+        // todo
+        $node = $this->dom->createElement('actions');
         $this->rootNode->appendChild($node);
     }
 
@@ -45,9 +46,16 @@ abstract class AbstractJobConfigDumper
         $this->rootNode->appendChild($node);
     }
 
-    public function buildDisabledNode(bool $disabled): void
+    public function buildDisplayNameNode(?string $displayName): void
     {
-        $node = $this->dom->createElement('disabled', $disabled ? 'true' : 'false');
+        $node = $this->dom->createElement('displayName', $displayName);
+        $this->rootNode->appendChild($node);
+    }
+
+    public function buildKeepDependenciesNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('keepDependencies', 'false');
         $this->rootNode->appendChild($node);
     }
 
@@ -96,6 +104,41 @@ abstract class AbstractJobConfigDumper
         }
     }
 
+    public function buildSourceControlManagementNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('scm');
+        $node->setAttribute('class', 'hudson.scm.NullSCM');
+        $this->rootNode->appendChild($node);
+    }
+
+    public function buildCanRoamNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('canRoam', 'true');
+        $this->rootNode->appendChild($node);
+    }
+
+    public function buildDisabledNode(bool $disabled): void
+    {
+        $node = $this->dom->createElement('disabled', $disabled ? 'true' : 'false');
+        $this->rootNode->appendChild($node);
+    }
+
+    public function buildBlockBuildWhenDownstreamBuildingNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('blockBuildWhenDownstreamBuilding', 'false');
+        $this->rootNode->appendChild($node);
+    }
+
+    public function buildBlockBuildWhenUpstreamBuildingNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('blockBuildWhenUpstreamBuilding', 'false');
+        $this->rootNode->appendChild($node);
+    }
+
     public function buildTriggersNode(array $triggers): void
     {
         $node = $this->dom->createElement('triggers');
@@ -121,6 +164,13 @@ abstract class AbstractJobConfigDumper
             default:
                 throw new BuilderException(sprintf('Invalid trigger type: %s', $trigger[0]));
         }
+    }
+
+    public function buildConcurrentBuildNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('concurrentBuild', 'false');
+        $this->rootNode->appendChild($node);
     }
 
     public function buildBuildersNode(array $builders): void
@@ -231,5 +281,12 @@ abstract class AbstractJobConfigDumper
             default:
                 throw new BuilderException(sprintf('Invalid publisher type: %s', $publisher[0]));
         }
+    }
+
+    public function buildWrappersNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('buildWrappers');
+        $this->rootNode->appendChild($node);
     }
 }

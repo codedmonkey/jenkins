@@ -121,13 +121,21 @@ class JobConfigBuilder
         /** @var AbstractJobConfigDumper $dumper */
         $dumper = new $typeMap[$this->type];
 
-        $dumper->buildDisplayNameNode($this->displayName);
+        $dumper->buildActionsNode();
         $dumper->buildDescriptionNode($this->description);
-        $dumper->buildDisabledNode($this->disabled);
+        $dumper->buildDisplayNameNode($this->displayName);
+        $dumper->buildKeepDependenciesNode();
         $dumper->buildParametersNode($this->parameters);
+        $dumper->buildSourceControlManagementNode();
+        $dumper->buildCanRoamNode();
+        $dumper->buildDisabledNode($this->disabled);
+        $dumper->buildBlockBuildWhenDownstreamBuildingNode();
+        $dumper->buildBlockBuildWhenUpstreamBuildingNode();
         $dumper->buildTriggersNode($this->triggers);
+        $dumper->buildConcurrentBuildNode();
         $dumper->buildBuildersNode($this->builders);
         $dumper->buildPublishersNode($this->publishers);
+        $dumper->buildWrappersNode();
 
         return $dumper->dump();
     }
