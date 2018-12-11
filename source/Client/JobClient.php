@@ -27,36 +27,12 @@ class JobClient extends AbstractClient
         $this->jobFactory = new JobFactory($jenkins);
     }
 
-    public function create(string $name, ?string $folder, string $configuration)
-    {
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
-        $url = sprintf('createItem?name=%s', $name);
-
-        $options = [
-            'headers' => [
-                'Content-Type' => 'application/xml',
-            ],
-        ];
-
-        $this->jenkins->post($urlPrefix . $url, $configuration, $options);
-    }
-
-    public function update(string $name, ?string $folder, string $configuration)
-    {
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
-        $url = $this->getApiPath($name) . 'config.xml';
-
-        $options = [
-            'headers' => [
-                'Content-Type' => 'application/xml',
-            ],
-        ];
-
-        $this->jenkins->post($urlPrefix . $url, $configuration, $options);
-    }
-
     public function get(string $name, ?string $folder = null, $flags = 0)
     {
+        $shortName = $this->getJobName($name, $folder);
+        $folder = $this->getFolderName($name, $folder);
+        $name = $shortName;
+
         if ($flags ^ self::FORCE_FETCH && isset($this->jobs[$folder][$name])) {
             return $this->jobs[$folder][$name];
         }
@@ -120,6 +96,10 @@ class JobClient extends AbstractClient
 
     public function getConfig(string $name, ?string $folder = null, $flags = 0)
     {
+        $shortName = $this->getJobName($name, $folder);
+        $folder = $this->getFolderName($name, $folder);
+        $name = $shortName;
+
         $urlPrefix = $folder ? $this->getApiPath($folder) : null;
         $url = $this->getApiPath($name) . 'config.xml';
 
@@ -128,12 +108,92 @@ class JobClient extends AbstractClient
         return $data;
     }
 
-    private function getApiPath(string $job)
+    public function build(string $name, ?string $folder = null, array $parameters = [])
+    {
+        $shortName = $this->getJobName($name, $folder);
+        $folder = $this->getFolderName($name, $folder);
+        $name = $shortName;
+
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $url = $this->getApiPath($name) . (count($parameters) ? 'buildWithParameters' : 'build');
+
+        $this->jenkins->post($urlPrefix . $url, count($parameters) ? http_build_query($parameters) : '');
+    }
+
+    public function create(string $name, ?string $folder, string $configuration)
+    {
+        $shortName = $this->getJobName($name, $folder);
+        $folder = $this->getFolderName($name, $folder);
+        $name = $shortName;
+
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $url = sprintf('createItem?name=%s', $name);
+
+        $options = [
+            'headers' => [
+                'Content-Type' => 'application/xml',
+            ],
+        ];
+
+        $this->jenkins->post($urlPrefix . $url, $configuration, $options);
+    }
+
+    public function update(string $name, ?string $folder, string $configuration)
+    {
+        $shortName = $this->getJobName($name, $folder);
+        $folder = $this->getFolderName($name, $folder);
+        $name = $shortName;
+
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $url = $this->getApiPath($name) . 'config.xml';
+
+        $options = [
+            'headers' => [
+                'Content-Type' => 'application/xml',
+            ],
+        ];
+
+        $this->jenkins->post($urlPrefix . $url, $configuration, $options);
+    }
+
+    public function delete(string $name, ?string $folder = null)
+    {
+        $shortName = $this->getJobName($name, $folder);
+        $folder = $this->getFolderName($name, $folder);
+        $name = $shortName;
+
+        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $url = $this->getApiPath($name) . 'doDelete';
+
+        $this->jenkins->post($urlPrefix . $url);
+
+        unset($this->jobs[$folder][$name]);
+    }
+
+    private function getApiPath(string $job): string
     {
         $parts = explode('/', $job);
 
         return implode('', array_map(function($part) {
             return sprintf('job/%s/', $part);
         }, $parts));
+    }
+
+    private function getJobName(string $name, ?string $folder): string
+    {
+        $fullName = implode('/', [$folder, $name]);
+        $parts = explode('/', $fullName);
+
+        return array_pop($parts);
+    }
+
+    private function getFolderName(string $name, ?string $folder): string
+    {
+        $fullName = implode('/', [$folder, $name]);
+        $parts = explode('/', $fullName);
+
+        array_pop($parts);
+
+        return implode('/', $parts);
     }
 }

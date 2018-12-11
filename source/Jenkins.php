@@ -65,7 +65,7 @@ class Jenkins
         return $response->getBody();
     }
 
-    public function post(string $url, string $body, array $options = []): string
+    public function post(string $url, string $body = '', array $options = []): string
     {
         $url = $this->url . '/' . $url;
 

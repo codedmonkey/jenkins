@@ -89,6 +89,11 @@ class AbstractJob
         $this->data = $data;
     }
 
+    public function delete(): void
+    {
+        $this->jenkins->jobs->delete($this->data['fullName'], null);
+    }
+
     protected function initialize(): void
     {
         if ($this->initialized) {
