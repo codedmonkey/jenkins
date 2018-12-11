@@ -48,6 +48,10 @@ abstract class AbstractJobConfigDumper
 
     public function buildDisplayNameNode(?string $displayName): void
     {
+        if (!$displayName) {
+            return;
+        }
+
         $node = $this->dom->createElement('displayName', $displayName);
         $this->rootNode->appendChild($node);
     }
@@ -125,14 +129,14 @@ abstract class AbstractJobConfigDumper
         $this->rootNode->appendChild($node);
     }
 
-    public function buildBlockBuildWhenDownstreamBuildingNode(): void
+    public function buildBlockDownstreamNode(): void
     {
         // todo
         $node = $this->dom->createElement('blockBuildWhenDownstreamBuilding', 'false');
         $this->rootNode->appendChild($node);
     }
 
-    public function buildBlockBuildWhenUpstreamBuildingNode(): void
+    public function buildBlockUpstreamNode(): void
     {
         // todo
         $node = $this->dom->createElement('blockBuildWhenUpstreamBuilding', 'false');
@@ -166,7 +170,7 @@ abstract class AbstractJobConfigDumper
         }
     }
 
-    public function buildConcurrentBuildNode(): void
+    public function buildConcurrentNode(): void
     {
         // todo
         $node = $this->dom->createElement('concurrentBuild', 'false');
@@ -288,5 +292,25 @@ abstract class AbstractJobConfigDumper
         // todo
         $node = $this->dom->createElement('buildWrappers');
         $this->rootNode->appendChild($node);
+    }
+
+    public function buildFolderViewsNode(array $views): void
+    {
+
+    }
+
+    public function buildFolderViewNode(\DOMElement $parent, string $viewType): void
+    {
+
+    }
+
+    public function buildHealthMetricsNode(): void
+    {
+
+    }
+
+    public function buildIconNode(): void
+    {
+
     }
 }

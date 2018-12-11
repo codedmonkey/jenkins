@@ -14,7 +14,7 @@ class FolderJobConfigDumper extends AbstractJobConfigDumper
         $this->dom->appendChild($this->rootNode);
     }
 
-    public function buildDisabledNode(bool $disabled): void
+    public function buildKeepDependenciesNode(): void
     {
 
     }
@@ -29,12 +29,37 @@ class FolderJobConfigDumper extends AbstractJobConfigDumper
 
     }
 
+    public function buildCanRoamNode(): void
+    {
+
+    }
+
+    public function buildDisabledNode(bool $disabled): void
+    {
+
+    }
+
+    public function buildBlockDownstreamNode(): void
+    {
+
+    }
+
+    public function buildBlockUpstreamNode(): void
+    {
+
+    }
+
     public function buildTriggersNode(array $triggers): void
     {
 
     }
 
     public function buildTriggerNode(\DOMElement $parent, $trigger): void
+    {
+
+    }
+
+    public function buildConcurrentNode(): void
     {
 
     }
@@ -57,5 +82,70 @@ class FolderJobConfigDumper extends AbstractJobConfigDumper
     public function buildPublisherNode(\DOMElement $parent, $publisher): void
     {
 
+    }
+
+    public function buildWrappersNode(): void
+    {
+
+    }
+
+    public function buildFolderViewsNode(array $views): void
+    {
+        // todo
+        if (0 === count($views)) {
+            return;
+        }
+
+        $node = $this->dom->createElement('folderViews');
+        $node->setAttribute('class', 'com.cloudbees.hudson.plugins.folder.views.DefaultFolderViewHolder');
+        $this->rootNode->appendChild($node);
+
+        $viewsNode = $this->dom->createElement('views');
+        $node->appendChild($viewsNode);
+
+        $this->buildFolderViewNode($viewsNode, 'hudson.model.AllView');
+
+        $tabsNode = $this->dom->createElement('tabBar');
+        $tabsNode->setAttribute('class', 'hudson.views.DefaultViewsTabBar');
+        $viewsNode->appendChild($tabsNode);
+    }
+
+    public function buildFolderViewNode(\DOMElement $parent, string $viewType): void
+    {
+        $node = $this->dom->createElement($viewType);
+        $parent->appendChild($node);
+
+        $ownerNode = $this->dom->createElement('owner');
+        $ownerNode->setAttribute('class', 'com.cloudbees.hudson.plugins.folder.Folder');
+        $ownerNode->setAttribute('reference', '../../../..');
+        $node->appendChild($ownerNode);
+
+        $nameNode = $this->dom->createElement('name', 'All');
+        $node->appendChild($nameNode);
+
+        $filterExecutorsNode = $this->dom->createElement('filterExecutors', 'false');
+        $node->appendChild($filterExecutorsNode);
+
+        $filterQueueNode = $this->dom->createElement('filterQueue', 'false');
+        $node->appendChild($filterQueueNode);
+
+        $propertiesNode = $this->dom->createElement('properties');
+        $propertiesNode->setAttribute('class', 'hudson.model.View$PropertyList');
+        $node->appendChild($propertiesNode);
+    }
+
+    public function buildHealthMetricsNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('healthMetrics');
+        $this->rootNode->appendChild($node);
+    }
+
+    public function buildIconNode(): void
+    {
+        // todo
+        $node = $this->dom->createElement('icon');
+        $node->setAttribute('class', 'com.cloudbees.hudson.plugins.folder.icons.StockFolderIcon');
+        $this->rootNode->appendChild($node);
     }
 }

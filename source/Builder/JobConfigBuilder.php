@@ -129,13 +129,16 @@ class JobConfigBuilder
         $dumper->buildSourceControlManagementNode();
         $dumper->buildCanRoamNode();
         $dumper->buildDisabledNode($this->disabled);
-        $dumper->buildBlockBuildWhenDownstreamBuildingNode();
-        $dumper->buildBlockBuildWhenUpstreamBuildingNode();
+        $dumper->buildBlockDownstreamNode();
+        $dumper->buildBlockUpstreamNode();
         $dumper->buildTriggersNode($this->triggers);
-        $dumper->buildConcurrentBuildNode();
+        $dumper->buildConcurrentNode();
         $dumper->buildBuildersNode($this->builders);
         $dumper->buildPublishersNode($this->publishers);
         $dumper->buildWrappersNode();
+        $dumper->buildFolderViewsNode([]);
+        $dumper->buildHealthMetricsNode();
+        $dumper->buildIconNode();
 
         return $dumper->dump();
     }
