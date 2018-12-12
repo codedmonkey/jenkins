@@ -5,6 +5,9 @@
 
 namespace CodedMonkey\Jenkins\Builder;
 
+use CodedMonkey\Jenkins\Builder\Config\BuilderInterface;
+use CodedMonkey\Jenkins\Builder\Config\PublisherInterface;
+use CodedMonkey\Jenkins\Builder\Config\ShellBuilder;
 use CodedMonkey\Jenkins\Builder\Dumper\AbstractJobConfigDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\FolderJobConfigDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\FreestyleJobConfigDumper;
@@ -67,42 +70,26 @@ class JobConfigBuilder
         return $this;
     }
 
-    public function addShellBuilder(string $command): self
+    public function addBuilder(BuilderInterface $builder): self
     {
-        $this->builders[] = ['shell', $command];
+        $this->builders[] = $builder;
 
         return $this;
     }
 
-    /**
-     * Cleans up the job's workspace through the Workspace Cleanup Plugin
-     *
-     * @param array       $includePatterns  List of files to be removed
-     * @param array       $excludePatterns  List of files to keep intact
-     * @param array       $cleanWhen        Clean the directory depending on the build state: success, unstable, failure, notBuilt or aborted (defaults to true)
-     * @param bool        $matchDirectories Apply patterns on directories (defaults to false)
-     * @param bool        $failBuild        Fail build when cleanup fails (defaults to false)
-     * @param bool        $cleanupParent    Cleanup matrix parent workspace (defaults to false)
-     * @param string|null $externalCommand  External command to cleanup workspace
-     * @param bool        $deferredWipeout  Use deferred wipeout (defaults to true)
-     *
-     * @return JobConfigBuilder
-     */
-    public function addWorkspaceCleanupPublisher(array $includePatterns = [], array $excludePatterns = [], array $cleanWhen = [], bool $matchDirectories = false, bool $failBuild = false, bool $cleanupParent = false, ?string $externalCommand = null, bool $deferredWipeout = true): self
+    public function addShellBuilder(string $command): self
     {
-        $this->publishers[] = [
-            'workspace-cleanup',
-            $cleanWhen,
-            $failBuild,
-            [
-                $includePatterns,
-                $excludePatterns,
-            ],
-            $matchDirectories,
-            $cleanupParent,
-            $deferredWipeout,
-            $externalCommand,
-        ];
+        $builder = (new ShellBuilder())
+            ->setCommand($command);
+
+        $this->addBuilder($builder);
+
+        return $this;
+    }
+
+    public function addPublisher(PublisherInterface $publisher)
+    {
+        $this->publishers[] = $publisher;
 
         return $this;
     }

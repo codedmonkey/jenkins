@@ -5,6 +5,15 @@
 
 namespace CodedMonkey\Jenkins\Builder\Dumper;
 
+use CodedMonkey\Jenkins\Builder\Config\BuilderInterface;
+use CodedMonkey\Jenkins\Builder\Config\PublisherInterface;
+use CodedMonkey\Jenkins\Builder\Config\ShellBuilder;
+use CodedMonkey\Jenkins\Builder\Config\TimedTrigger;
+use CodedMonkey\Jenkins\Builder\Config\TriggerInterface;
+use CodedMonkey\Jenkins\Builder\Config\WorkspaceCleanupPublisher;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\ShellBuilderDumper;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\TimedTriggerDumper;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\WorkspaceCleanupPublisherDumper;
 use CodedMonkey\Jenkins\Exception\BuilderException;
 
 abstract class AbstractJobConfigDumper
@@ -153,21 +162,22 @@ abstract class AbstractJobConfigDumper
         }
     }
 
-    public function buildTriggerNode(\DOMElement $parent, $trigger): void
+    public function buildTriggerNode(\DOMElement $parent, TriggerInterface $trigger): void
     {
-        switch ($trigger[0]) {
-            case 'timed':
-                $node = $this->dom->createElement('hudson.triggers.TimerTrigger');
-                $parent->appendChild($node);
+        static $dumperClasses = [
+            TimedTrigger::class => TimedTriggerDumper::class,
+        ];
 
-                $specificationNode = $this->dom->createElement('spec', $trigger[1]);
-                $node->appendChild($specificationNode);
+        $class = get_class($trigger);
 
-                break;
-
-            default:
-                throw new BuilderException(sprintf('Invalid trigger type: %s', $trigger[0]));
+        if (!isset($dumperClasses[$class])) {
+            throw new BuilderException(sprintf('Invalid trigger type: %s', $class));
         }
+
+        $dumper = new $dumperClasses[$class];
+
+        $node = $dumper->dump($this->dom, $trigger);
+        $parent->appendChild($node);
     }
 
     public function buildConcurrentNode(): void
@@ -187,21 +197,22 @@ abstract class AbstractJobConfigDumper
         }
     }
 
-    public function buildBuilderNode(\DOMElement $parent, $builder): void
+    public function buildBuilderNode(\DOMElement $parent, BuilderInterface $builder): void
     {
-        switch ($builder[0]) {
-            case 'shell':
-                $node = $this->dom->createElement('hudson.tasks.Shell');
-                $parent->appendChild($node);
+        static $dumperClasses = [
+            ShellBuilder::class => ShellBuilderDumper::class,
+        ];
 
-                $commandNode = $this->dom->createElement('command', $builder[1]);
-                $node->appendChild($commandNode);
+        $class = get_class($builder);
 
-                break;
-
-            default:
-                throw new BuilderException(sprintf('Invalid builder type: %s', $builder[0]));
+        if (!isset($dumperClasses[$class])) {
+            throw new BuilderException(sprintf('Invalid builder type: %s', $class));
         }
+
+        $dumper = new $dumperClasses[$class];
+
+        $node = $dumper->dump($this->dom, $builder);
+        $parent->appendChild($node);
     }
 
     public function buildPublishersNode(array $publishers): void
@@ -214,77 +225,22 @@ abstract class AbstractJobConfigDumper
         }
     }
 
-    public function buildPublisherNode(\DOMElement $parent, $publisher): void
+    public function buildPublisherNode(\DOMElement $parent, PublisherInterface $publisher): void
     {
-        switch ($publisher[0]) {
-            case 'workspace-cleanup':
-                $node = $this->dom->createElement('hudson.plugins.ws__cleanup.WsCleanup');
-                $node->setAttribute('plugin', 'ws-cleanup');
-                $parent->appendChild($node);
+        static $dumperClasses = [
+            WorkspaceCleanupPublisher::class => WorkspaceCleanupPublisherDumper::class,
+        ];
 
-                $patterns = array_merge(
-                    array_map(function($pattern) {
-                        return ['include', $pattern];
-                    }, $publisher[3][0]),
-                    array_map(function($pattern) {
-                        return ['exclude', $pattern];
-                    }, $publisher[3][1])
-                );
+        $class = get_class($publisher);
 
-                if (count($patterns) > 0) {
-                    $patternsNode = $this->dom->createElement('patterns');
-                    $node->appendChild($patternsNode);
-
-                    foreach ($patterns as $pattern) {
-                        $patternNode = $this->dom->createElement('hudson.plugins.ws__cleanup.Pattern');
-                        $patternsNode->appendChild($patternNode);
-
-                        $patternTextNode = $this->dom->createElement('pattern', $pattern[0]);
-                        $patternNode->appendChild($patternTextNode);
-
-                        $patternTypeNode = $this->dom->createElement('type', strtoupper($pattern[1]));
-                        $patternNode->appendChild($patternTypeNode);
-                    }
-                }
-                else {
-                    $patternsNode = $this->dom->createElement('patterns');
-                    $patternsNode->setAttribute('class', 'empty-list');
-                    $node->appendChild($patternsNode);
-                }
-
-                $deleteDirectoriesNode = $this->dom->createElement('deleteDirs', $publisher[4] ? 'true' : 'false');
-                $node->appendChild($deleteDirectoriesNode);
-
-                // todo make configurable
-                $skipNode = $this->dom->createElement('skipWhenFailed', 'false');
-                $node->appendChild($skipNode);
-
-                static $buildStates = ['success', 'unstable', 'failure', 'notBuilt', 'aborted'];
-
-                foreach ($buildStates as $buildState) {
-                    $clean = $publisher[1][$buildState] ?? true;
-
-                    $cleanNode = $this->dom->createElement(sprintf('cleanWhen%s', ucfirst($buildState)), $clean ? 'true' : 'false');
-                    $node->appendChild($cleanNode);
-                }
-
-                $failNode = $this->dom->createElement('notFailBuild', $publisher[2] ? 'false' : 'true');
-                $node->appendChild($failNode);
-
-                $cleanupParentNode = $this->dom->createElement('cleanupMatrixParent', $publisher[5] ? 'true' : 'false');
-                $node->appendChild($cleanupParentNode);
-
-                $externalCommandNode = $this->dom->createElement('externalDelete', $publisher[7]);
-                $node->appendChild($externalCommandNode);
-
-                $deferredWipeoutNode = $this->dom->createElement('notFailBuild', $publisher[6] ? 'false' : 'true');
-                $node->appendChild($deferredWipeoutNode);
-
-                break;
-
-            default:
-                throw new BuilderException(sprintf('Invalid publisher type: %s', $publisher[0]));
+        if (!isset($dumperClasses[$class])) {
+            throw new BuilderException(sprintf('Invalid publisher type: %s', $class));
         }
+
+        $dumper = new $dumperClasses[$class];
+
+        $node = $dumper->dump($this->dom, $publisher);
+        $parent->appendChild($node);
     }
 
     public function buildWrappersNode(): void
