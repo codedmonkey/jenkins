@@ -6,13 +6,18 @@
 namespace CodedMonkey\Jenkins\Builder\Dumper;
 
 use CodedMonkey\Jenkins\Builder\Config\BuilderInterface;
+use CodedMonkey\Jenkins\Builder\Config\ParameterizedTriggerPublisher;
+use CodedMonkey\Jenkins\Builder\Config\ParameterizedTriggersPublisher;
 use CodedMonkey\Jenkins\Builder\Config\PublisherInterface;
 use CodedMonkey\Jenkins\Builder\Config\ShellBuilder;
 use CodedMonkey\Jenkins\Builder\Config\TimedTrigger;
 use CodedMonkey\Jenkins\Builder\Config\TriggerInterface;
+use CodedMonkey\Jenkins\Builder\Config\TriggerPublisher;
 use CodedMonkey\Jenkins\Builder\Config\WorkspaceCleanupPublisher;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\ParameterizedTriggerPublisherDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\Config\ShellBuilderDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\Config\TimedTriggerDumper;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\TriggerPublisherDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\Config\WorkspaceCleanupPublisherDumper;
 use CodedMonkey\Jenkins\Exception\BuilderException;
 
@@ -228,6 +233,9 @@ abstract class AbstractJobConfigDumper
     public function buildPublisherNode(\DOMElement $parent, PublisherInterface $publisher): void
     {
         static $dumperClasses = [
+            ParameterizedTriggersPublisher::class => ParameterizedTriggerPublisherDumper::class,
+            ParameterizedTriggerPublisher::class => ParameterizedTriggerPublisherDumper::class,
+            TriggerPublisher::class => TriggerPublisherDumper::class,
             WorkspaceCleanupPublisher::class => WorkspaceCleanupPublisherDumper::class,
         ];
 

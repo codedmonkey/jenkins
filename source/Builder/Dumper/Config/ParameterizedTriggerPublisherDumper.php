@@ -41,9 +41,9 @@ class ParameterizedTriggerPublisherDumper
         $node->appendChild($configsNode);
 
         if (count($trigger->getPredefinedParameters())) {
-            $predefinedParameters = array_map(function($key, $value) {
-                return sprintf("%s=%s\n", $key, $value);
-            }, array_keys($trigger->getPredefinedParameters(), $trigger->getPredefinedParameters()));
+            $predefinedParameters = implode(PHP_EOL, array_map(function($key, $value) {
+                return sprintf('%s=%s', $key, $value);
+            }, array_keys($trigger->getPredefinedParameters()), $trigger->getPredefinedParameters()));
 
             $predefinedParametersNode = $dom->createElement('hudson.plugins.parameterizedtrigger.PredefinedBuildParameters');
             $configsNode->appendChild($predefinedParametersNode);
