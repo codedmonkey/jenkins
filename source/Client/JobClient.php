@@ -181,7 +181,7 @@ class JobClient extends AbstractClient
 
     private function getJobName(string $name, ?string $folder): string
     {
-        $fullName = implode('/', [$folder, $name]);
+        $fullName = implode('/', array_filter([$folder, $name]));
         $parts = explode('/', $fullName);
 
         return array_pop($parts);
@@ -189,7 +189,7 @@ class JobClient extends AbstractClient
 
     private function getFolderName(string $name, ?string $folder): string
     {
-        $fullName = implode('/', [$folder, $name]);
+        $fullName = implode('/', array_filter([$folder, $name]));
         $parts = explode('/', $fullName);
 
         array_pop($parts);
