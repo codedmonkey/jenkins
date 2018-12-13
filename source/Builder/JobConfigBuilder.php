@@ -5,9 +5,14 @@
 
 namespace CodedMonkey\Jenkins\Builder;
 
+use CodedMonkey\Jenkins\Builder\Config\BooleanParameter;
 use CodedMonkey\Jenkins\Builder\Config\BuilderInterface;
+use CodedMonkey\Jenkins\Builder\Config\ParameterInterface;
+use CodedMonkey\Jenkins\Builder\Config\PasswordParameter;
 use CodedMonkey\Jenkins\Builder\Config\PublisherInterface;
 use CodedMonkey\Jenkins\Builder\Config\ShellBuilder;
+use CodedMonkey\Jenkins\Builder\Config\StringParameter;
+use CodedMonkey\Jenkins\Builder\Config\TimedTrigger;
 use CodedMonkey\Jenkins\Builder\Dumper\AbstractJobConfigDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\FolderJobConfigDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\FreestyleJobConfigDumper;
@@ -56,16 +61,36 @@ class JobConfigBuilder
         return $this;
     }
 
-    public function addParameter(string $name, string $type = 'string', ?string $defaultValue = null, ?string $description = null): self
+    public function addParameter(string $name, string $type = 'string', $defaultValue = null, ?string $description = null): self
     {
-        $this->parameters[] = [$type, $name, $description, $defaultValue];
+        static $parameterClasses = [
+            'boolean' => BooleanParameter::class,
+            'password' => PasswordParameter::class,
+            'string' => StringParameter::class,
+        ];
+
+        if (!isset($parameterClasses[$type])) {
+            throw new BuilderException(sprintf('Invalid parameter type: %s', $type));
+        }
+
+        /** @var ParameterInterface $parameter */
+        $parameter = new $parameterClasses[$type]();
+
+        $parameter
+            ->setName($name)
+            ->setDescription($description)
+            ->setDefaultValue($defaultValue)
+        ;
+
+        $this->parameters[] = $parameter;
 
         return $this;
     }
 
     public function addTimedTrigger(string $cron): self
     {
-        $this->triggers[] = ['timed', $cron];
+        $this->triggers[] = (new TimedTrigger())
+            ->setCron($cron);
 
         return $this;
     }

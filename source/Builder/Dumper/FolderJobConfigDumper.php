@@ -5,6 +5,11 @@
 
 namespace CodedMonkey\Jenkins\Builder\Dumper;
 
+use CodedMonkey\Jenkins\Builder\Config\BuilderInterface;
+use CodedMonkey\Jenkins\Builder\Config\ParameterInterface;
+use CodedMonkey\Jenkins\Builder\Config\PublisherInterface;
+use CodedMonkey\Jenkins\Builder\Config\TriggerInterface;
+
 class FolderJobConfigDumper extends AbstractJobConfigDumper
 {
     public function buildRootNode(\DOMDocument $dom): void
@@ -24,7 +29,7 @@ class FolderJobConfigDumper extends AbstractJobConfigDumper
 
     }
 
-    public function buildParameterNode(\DOMElement $parent, array $parameter): void
+    public function buildParameterNode(\DOMElement $parent, ParameterInterface $parameter): void
     {
 
     }
@@ -54,7 +59,7 @@ class FolderJobConfigDumper extends AbstractJobConfigDumper
 
     }
 
-    public function buildTriggerNode(\DOMElement $parent, $trigger): void
+    public function buildTriggerNode(\DOMElement $parent, TriggerInterface $trigger): void
     {
 
     }
@@ -69,7 +74,7 @@ class FolderJobConfigDumper extends AbstractJobConfigDumper
 
     }
 
-    public function buildBuilderNode(\DOMElement $parent, $builder): void
+    public function buildBuilderNode(\DOMElement $parent, BuilderInterface $builder): void
     {
 
     }
@@ -79,7 +84,7 @@ class FolderJobConfigDumper extends AbstractJobConfigDumper
 
     }
 
-    public function buildPublisherNode(\DOMElement $parent, $publisher): void
+    public function buildPublisherNode(\DOMElement $parent, PublisherInterface $publisher): void
     {
 
     }

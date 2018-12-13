@@ -5,17 +5,25 @@
 
 namespace CodedMonkey\Jenkins\Builder\Dumper;
 
+use CodedMonkey\Jenkins\Builder\Config\BooleanParameter;
 use CodedMonkey\Jenkins\Builder\Config\BuilderInterface;
+use CodedMonkey\Jenkins\Builder\Config\ParameterInterface;
 use CodedMonkey\Jenkins\Builder\Config\ParameterizedTriggerPublisher;
 use CodedMonkey\Jenkins\Builder\Config\ParameterizedTriggersPublisher;
+use CodedMonkey\Jenkins\Builder\Config\PasswordParameter;
 use CodedMonkey\Jenkins\Builder\Config\PublisherInterface;
 use CodedMonkey\Jenkins\Builder\Config\ShellBuilder;
+use CodedMonkey\Jenkins\Builder\Config\StringParameter;
 use CodedMonkey\Jenkins\Builder\Config\TimedTrigger;
 use CodedMonkey\Jenkins\Builder\Config\TriggerInterface;
 use CodedMonkey\Jenkins\Builder\Config\TriggerPublisher;
 use CodedMonkey\Jenkins\Builder\Config\WorkspaceCleanupPublisher;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\AbstractParameterDumper;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\BooleanParameterDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\Config\ParameterizedTriggerPublisherDumper;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\PasswordParameterDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\Config\ShellBuilderDumper;
+use CodedMonkey\Jenkins\Builder\Dumper\Config\StringParameterDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\Config\TimedTriggerDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\Config\TriggerPublisherDumper;
 use CodedMonkey\Jenkins\Builder\Dumper\Config\WorkspaceCleanupPublisherDumper;
@@ -97,29 +105,25 @@ abstract class AbstractJobConfigDumper
         }
     }
 
-    public function buildParameterNode(\DOMElement $parent, array $parameter): void
+    public function buildParameterNode(\DOMElement $parent, ParameterInterface $parameter): void
     {
-        static $typeMap = [
-            'password' => 'hudson.model.PasswordParameterDefinition',
-            'string' => 'hudson.model.StringParameterDefinition',
+        static $dumperClasses = [
+            BooleanParameter::class => BooleanParameterDumper::class,
+            PasswordParameter::class => PasswordParameterDumper::class,
+            StringParameter::class => StringParameterDumper::class,
         ];
 
-        if (!isset($typeMap[$parameter[0]])) {
-            throw new BuilderException(sprintf('Invalid parameter type: %s', $parameter[0]));
+        $class = get_class($parameter);
+
+        if (!isset($dumperClasses[$class])) {
+            throw new BuilderException(sprintf('Invalid parameter type: %s', $class));
         }
 
-        $node = $this->dom->createElement($typeMap[$parameter[0]]);
+        /** @var AbstractParameterDumper $dumper */
+        $dumper = new $dumperClasses[$class];
+
+        $node = $dumper->dump($this->dom, $parameter);
         $parent->appendChild($node);
-
-        $node->appendChild($this->dom->createElement('name', $parameter[1]));
-
-        if ($parameter[2]) {
-            $node->appendChild($this->dom->createElement('description', $parameter[2]));
-        }
-
-        if ($parameter[3]) {
-            $node->appendChild($this->dom->createElement('defaultValue', $parameter[3]));
-        }
     }
 
     public function buildSourceControlManagementNode(): void
