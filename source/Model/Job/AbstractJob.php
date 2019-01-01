@@ -6,7 +6,7 @@
 namespace CodedMonkey\Jenkins\Model\Job;
 
 use CodedMonkey\Jenkins\Client\JobClient;
-use CodedMonkey\Jenkins\Exception\RuntimeException;
+use CodedMonkey\Jenkins\Exception\ModelException;
 use CodedMonkey\Jenkins\Jenkins;
 
 class AbstractJob
@@ -76,7 +76,7 @@ class AbstractJob
         }
 
         if (!isset($this->data[$name])) {
-            throw new RuntimeException(sprintf('Invalid field: %s', $name));
+            throw new ModelException(sprintf('Invalid field: %s', $name));
         }
 
         return $this->data[$name];

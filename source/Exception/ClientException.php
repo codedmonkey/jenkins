@@ -5,6 +5,7 @@
 
 namespace CodedMonkey\Jenkins\Exception;
 
-class RuntimeException extends \RuntimeException
+class ClientException extends \RuntimeException
 {
+
 }

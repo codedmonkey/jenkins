@@ -5,7 +5,7 @@
 
 namespace CodedMonkey\Jenkins\Model;
 
-use CodedMonkey\Jenkins\Exception\RuntimeException;
+use CodedMonkey\Jenkins\Exception\ModelException;
 use CodedMonkey\Jenkins\Jenkins;
 use CodedMonkey\Jenkins\Model\Job\FolderJob;
 use CodedMonkey\Jenkins\Model\Job\FreestyleJob;
@@ -25,7 +25,7 @@ class JobFactory
         $type = $data['_class'] ?? false;
 
         if (!$type) {
-            throw new RuntimeException('No job type specified.');
+            throw new ModelException('No job type specified.');
         }
 
         static $typeMap = [
