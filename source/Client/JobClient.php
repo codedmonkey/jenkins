@@ -115,9 +115,14 @@ class JobClient extends AbstractClient
         $name = $shortName;
 
         $urlPrefix = $folder ? $this->getApiPath($folder) : null;
-        $url = $this->getApiPath($name) . (count($parameters) ? 'buildWithParameters' : 'build');
+        if (!count($parameters)) {
+            $url = $this->getApiPath($name) . 'build';
+        }
+        else {
+            $url = $this->getApiPath($name) . 'buildWithParameters?' . http_build_query($parameters);
+        }
 
-        $this->jenkins->post($urlPrefix . $url, count($parameters) ? http_build_query($parameters) : '');
+        $this->jenkins->post($urlPrefix . $url);
     }
 
     public function create(string $name, ?string $folder, string $configuration)
