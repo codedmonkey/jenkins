@@ -5,7 +5,7 @@
 
 namespace CodedMonkey\Jenkins\Model\Job;
 
-class FreestyleJob extends AbstractJob
+class FreestyleJob extends AbstractBuildableJob
 {
 
 }

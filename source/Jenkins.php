@@ -5,6 +5,7 @@
 
 namespace CodedMonkey\Jenkins;
 
+use CodedMonkey\Jenkins\Client\BuildClient;
 use CodedMonkey\Jenkins\Client\JobClient;
 use CodedMonkey\Jenkins\Exception\TransferException;
 use Http\Client\HttpClient;
@@ -15,11 +16,13 @@ use Psr\Http\Message\ResponseInterface;
 
 /**
  * @property JobClient $jobs
+ * @property BuildClient $builds
  */
 class Jenkins
 {
     private static $clientClasses = [
         'jobs' => JobClient::class,
+        'builds' => BuildClient::class,
     ];
 
     private $httpClient;

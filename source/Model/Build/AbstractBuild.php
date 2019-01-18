@@ -3,25 +3,27 @@
  * (c) Tim Goudriaan <tim@codedmonkey.com>
  */
 
-namespace CodedMonkey\Jenkins\Model\Job;
+namespace CodedMonkey\Jenkins\Model\Build;
 
-use CodedMonkey\Jenkins\Client\JobClient;
+use CodedMonkey\Jenkins\Client\BuildClient;
 use CodedMonkey\Jenkins\Exception\ModelException;
 use CodedMonkey\Jenkins\Jenkins;
+use CodedMonkey\Jenkins\Model\Job\JobInterface;
 
-class AbstractJob implements JobInterface
+class AbstractBuild implements BuildInterface
 {
     protected $jenkins;
+    private $job;
 
-    protected $config;
     protected $data;
     protected $initialized;
 
-    public function __construct(Jenkins $jenkins, array $data, bool $initialized = false)
+    public function __construct(Jenkins $jenkins, JobInterface $job, array $data, bool $initialized = false)
     {
         $this->jenkins = $jenkins;
-        $this->data = $data;
+        $this->job = $job;
 
+        $this->data = $data;
         $this->initialized = $initialized;
     }
 
@@ -35,16 +37,6 @@ class AbstractJob implements JobInterface
         return $this->getData('fullDisplayName');
     }
 
-    public function getName()
-    {
-        return $this->data['name'];
-    }
-
-    public function getFullName()
-    {
-        return $this->data['fullName'];
-    }
-
     public function getDescription()
     {
         return $this->getData('description');
@@ -55,15 +47,14 @@ class AbstractJob implements JobInterface
         return $this->getData('url');
     }
 
-    public function getConfig()
+    public function isBuilding()
     {
-        if ($this->config) {
-            return $this->config;
-        }
+        return $this->getData('building');
+    }
 
-        $this->config = $this->jenkins->jobs->getConfig($this->getFullName());
-
-        return $this->config;
+    public function getDuration()
+    {
+        return $this->getData('duration');
     }
 
     protected function getData(string $name)
@@ -83,15 +74,10 @@ class AbstractJob implements JobInterface
 
     public function refresh(): void
     {
-        $data = $this->jenkins->jobs->get($this->data['fullName'], null, JobClient::RETURN_RESPONSE);
+        $data = $this->jenkins->builds->get($this->data['fullName'], null, BuildClient::RETURN_RESPONSE);
 
         $this->data = $data;
         $this->initialized = true;
-    }
-
-    public function delete(): void
-    {
-        $this->jenkins->jobs->delete($this->data['fullName'], null);
     }
 
     protected function initialize(): void

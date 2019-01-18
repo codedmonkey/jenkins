@@ -11,10 +11,9 @@ use CodedMonkey\Jenkins\Model\JobFactory;
 
 class JobClient extends AbstractClient
 {
-    const FORCE_FETCH = 1;
-    const RETURN_RESPONSE = 2;
-    const INITIALIZE_JOBS = 4;
-    const RESOLVE_FOLDERS = 8;
+    const RETURN_RESPONSE = 1;
+    const INITIALIZE_JOBS = 2;
+    const RESOLVE_FOLDERS = 4;
 
     private $jobFactory;
     private $jobs = [];
@@ -33,12 +32,12 @@ class JobClient extends AbstractClient
         $folder = $this->getFolderName($name, $folder);
         $name = $shortName;
 
-        if ($flags ^ self::FORCE_FETCH && isset($this->jobs[$folder][$name])) {
+        if ($flags ^ self::RETURN_RESPONSE && isset($this->jobs[$folder][$name])) {
             return $this->jobs[$folder][$name];
         }
 
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
-        $url = $this->getApiPath($name) . 'api/json';
+        $urlPrefix = $folder ? self::getApiPath($folder) : null;
+        $url = self::getApiPath($name) . 'api/json';
 
         $data = $this->jenkins->request($urlPrefix . $url);
         $data = json_decode($data, true);
@@ -49,16 +48,26 @@ class JobClient extends AbstractClient
 
         $job = $this->jobFactory->create($data, true);
 
+        if (isset($data['builds'])) {
+            array_map(function ($buildData) use ($job) {
+                if (!isset($buildData['_class']) || !isset($buildData['number'])) {
+                    return;
+                }
+
+                $this->jenkins->builds->register($job, $buildData['number'], $buildData);
+            }, $data['builds']);
+        }
+
         return $this->jobs[$folder][$name] = $job;
     }
 
     public function all(?string $folder = null, $flags = 0)
     {
-        if ($flags ^ self::FORCE_FETCH && isset($this->folders[$folder])) {
+        if ($flags ^ self::RETURN_RESPONSE && isset($this->folders[$folder])) {
             return $this->jobs[$folder];
         }
 
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $urlPrefix = $folder ? self::getApiPath($folder) : null;
         $url = 'api/json?tree=jobs[_class,name,fullName]';
 
         $data = $this->jenkins->request($urlPrefix . $url);
@@ -100,8 +109,8 @@ class JobClient extends AbstractClient
         $folder = $this->getFolderName($name, $folder);
         $name = $shortName;
 
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
-        $url = $this->getApiPath($name) . 'config.xml';
+        $urlPrefix = $folder ? self::getApiPath($folder) : null;
+        $url = self::getApiPath($name) . 'config.xml';
 
         $data = $this->jenkins->request($urlPrefix . $url);
 
@@ -114,12 +123,12 @@ class JobClient extends AbstractClient
         $folder = $this->getFolderName($name, $folder);
         $name = $shortName;
 
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $urlPrefix = $folder ? self::getApiPath($folder) : null;
         if (!count($parameters)) {
-            $url = $this->getApiPath($name) . 'build';
+            $url = self::getApiPath($name) . 'build';
         }
         else {
-            $url = $this->getApiPath($name) . 'buildWithParameters?' . http_build_query($parameters);
+            $url = self::getApiPath($name) . 'buildWithParameters?' . http_build_query($parameters);
         }
 
         $this->jenkins->post($urlPrefix . $url);
@@ -131,7 +140,7 @@ class JobClient extends AbstractClient
         $folder = $this->getFolderName($name, $folder);
         $name = $shortName;
 
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
+        $urlPrefix = $folder ? self::getApiPath($folder) : null;
         $url = sprintf('createItem?name=%s', $name);
 
         $options = [
@@ -149,8 +158,8 @@ class JobClient extends AbstractClient
         $folder = $this->getFolderName($name, $folder);
         $name = $shortName;
 
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
-        $url = $this->getApiPath($name) . 'config.xml';
+        $urlPrefix = $folder ? self::getApiPath($folder) : null;
+        $url = self::getApiPath($name) . 'config.xml';
 
         $options = [
             'headers' => [
@@ -167,15 +176,15 @@ class JobClient extends AbstractClient
         $folder = $this->getFolderName($name, $folder);
         $name = $shortName;
 
-        $urlPrefix = $folder ? $this->getApiPath($folder) : null;
-        $url = $this->getApiPath($name) . 'doDelete';
+        $urlPrefix = $folder ? self::getApiPath($folder) : null;
+        $url = self::getApiPath($name) . 'doDelete';
 
         $this->jenkins->post($urlPrefix . $url);
 
         unset($this->jobs[$folder][$name]);
     }
 
-    private function getApiPath(string $job): string
+    public static function getApiPath(string $job): string
     {
         $parts = explode('/', $job);
 
