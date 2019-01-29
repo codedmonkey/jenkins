@@ -1,0 +1,26 @@
+{
+  "_class": "com.cloudbees.hudson.plugins.folder.Folder",
+  "description": "An example of a folder in Jenkins",
+  "displayName": "Folder Job",
+  "displayNameOrNull": "Folder Job",
+  "fullDisplayName": "Folder Job",
+  "fullName": "folder-job",
+  "name": "folder-job",
+  "url": "http://jenkins.host:8080/job/folder-job/",
+  "healthReport": [
+  ],
+  "jobs": [
+  ],
+  "primaryView": {
+    "_class": "hudson.model.AllView",
+    "name": "All",
+    "url": "http://jenkins.host:8080/job/folder-job/"
+  },
+  "views": [
+    {
+      "_class": "hudson.model.AllView",
+      "name": "All",
+      "url": "http://jenkins.host:8080/job/folder-job/"
+    }
+  ]
+}
