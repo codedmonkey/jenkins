@@ -6,6 +6,7 @@
 namespace CodedMonkey\Jenkins\Client;
 
 use CodedMonkey\Jenkins\Jenkins;
+use CodedMonkey\Jenkins\Model\Job\BuildableJobInterface;
 use CodedMonkey\Jenkins\Model\Job\FolderJob;
 use CodedMonkey\Jenkins\Model\JobFactory;
 
@@ -50,12 +51,25 @@ class JobClient extends AbstractClient
 
         if (isset($data['builds'])) {
             array_map(function ($buildData) use ($job) {
-                if (!isset($buildData['_class']) || !isset($buildData['number'])) {
+                $this->registerBuild($job, $buildData);
+            }, $data['builds']);
+
+            static $buildFields = [
+                'lastCompletedBuild',
+                'lastFailedBuild',
+                'lastStableBuild',
+                'lastSuccessfulBuild',
+                'lastUnstableBuild',
+                'lastUnsuccessfulBuild',
+            ];
+
+            array_map(function ($field) use ($job, $data) {
+                if (!isset($data[$field])) {
                     return;
                 }
 
-                $this->jenkins->builds->register($job, $buildData['number'], $buildData);
-            }, $data['builds']);
+                $this->registerBuild($job, $data[$field]);
+            }, $buildFields);
         }
 
         return $this->jobs[$folder][$name] = $job;
@@ -209,5 +223,14 @@ class JobClient extends AbstractClient
         array_pop($parts);
 
         return implode('/', $parts);
+    }
+
+    private function registerBuild(BuildableJobInterface $job, array $buildData)
+    {
+        if (!isset($buildData['_class']) || !isset($buildData['number'])) {
+            return;
+        }
+
+        $this->jenkins->builds->register($job, $buildData['number'], $buildData);
     }
 }
