@@ -19,5 +19,7 @@ interface BuildInterface
 
     public function getDuration();
 
+    public function getConsoleText();
+
     public function refresh(): void;
 }

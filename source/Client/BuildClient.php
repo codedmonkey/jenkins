@@ -46,7 +46,7 @@ class BuildClient extends AbstractClient
             return $data;
         }
 
-        $build = $this->buildFactory->create($job, $data, true);
+        $build = $this->buildFactory->create($job, $buildNumber, $data, true);
 
         return $this->builds[$jobName][$buildNumber] = $build;
     }
@@ -67,8 +67,24 @@ class BuildClient extends AbstractClient
             return $this->builds[$jobName][$buildNumber];
         }
 
-        $build = $this->buildFactory->create($job, $data);
+        $build = $this->buildFactory->create($job, $buildNumber, $data);
 
         return $this->builds[$jobName][$buildNumber] = $build;
+    }
+
+    public function getConsoleText($job, int $buildNumber)
+    {
+        if (!$job instanceof JobInterface) {
+            $job = $this->jenkins->jobs->get($job);
+        }
+
+        $jobName = $job->getFullName();
+
+        $urlPrefix = JobClient::getApiPath($jobName);
+        $url = $buildNumber . '/consoleText';
+
+        $data = $this->jenkins->request($urlPrefix . $url);
+
+        return $data;
     }
 }

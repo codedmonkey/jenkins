@@ -20,7 +20,7 @@ class BuildFactory
         $this->jenkins = $jenkins;
     }
 
-    public function create(JobInterface $job, array $data, bool $initialized = false)
+    public function create(JobInterface $job, int $buildNumber, array $data, bool $initialized = false)
     {
         $type = $data['_class'] ?? false;
 
@@ -34,6 +34,6 @@ class BuildFactory
 
         $class = $typeMap[$type] ?? Build::class;
 
-        return new $class($this->jenkins, $job, $data, $initialized);
+        return new $class($this->jenkins, $job, $buildNumber, $data, $initialized);
     }
 }

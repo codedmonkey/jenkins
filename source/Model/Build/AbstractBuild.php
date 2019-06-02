@@ -10,21 +10,29 @@ use CodedMonkey\Jenkins\Exception\ModelException;
 use CodedMonkey\Jenkins\Jenkins;
 use CodedMonkey\Jenkins\Model\Job\JobInterface;
 
-class AbstractBuild implements BuildInterface
+abstract class AbstractBuild implements BuildInterface
 {
     protected $jenkins;
     private $job;
+    private $buildNumber;
 
+    protected $consoleText;
     protected $data;
     protected $initialized;
 
-    public function __construct(Jenkins $jenkins, JobInterface $job, array $data, bool $initialized = false)
+    public function __construct(Jenkins $jenkins, JobInterface $job, int $buildNumber, array $data, bool $initialized = false)
     {
         $this->jenkins = $jenkins;
         $this->job = $job;
+        $this->buildNumber = $buildNumber;
 
         $this->data = $data;
         $this->initialized = $initialized;
+    }
+
+    public function getNumber(): int
+    {
+        return $this->buildNumber;
     }
 
     public function getDisplayName()
@@ -70,6 +78,17 @@ class AbstractBuild implements BuildInterface
         }
 
         return $this->data[$name];
+    }
+
+    public function getConsoleText()
+    {
+        if ($this->consoleText) {
+            return $this->consoleText;
+        }
+
+        $this->consoleText = $this->jenkins->builds->getConsoleText($this->job, $this->buildNumber);
+
+        return $this->consoleText;
     }
 
     public function refresh(): void
