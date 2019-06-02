@@ -24,6 +24,9 @@ class BuildClient extends AbstractClient
         $this->buildFactory = new BuildFactory($jenkins);
     }
 
+    /**
+     * @return BuildInterface|array
+     */
     public function get($job, int $buildNumber, int $flags = 0)
     {
         if (!$job instanceof JobInterface) {

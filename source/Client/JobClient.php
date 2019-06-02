@@ -8,6 +8,7 @@ namespace CodedMonkey\Jenkins\Client;
 use CodedMonkey\Jenkins\Jenkins;
 use CodedMonkey\Jenkins\Model\Job\BuildableJobInterface;
 use CodedMonkey\Jenkins\Model\Job\FolderJob;
+use CodedMonkey\Jenkins\Model\Job\JobInterface;
 use CodedMonkey\Jenkins\Model\JobFactory;
 
 class JobClient extends AbstractClient
@@ -27,6 +28,9 @@ class JobClient extends AbstractClient
         $this->jobFactory = new JobFactory($jenkins);
     }
 
+    /**
+     * @return JobInterface|BuildableJobInterface|array
+     */
     public function get(string $name, ?string $folder = null, $flags = 0)
     {
         $shortName = $this->getJobName($name, $folder);

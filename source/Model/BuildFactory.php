@@ -8,6 +8,7 @@ namespace CodedMonkey\Jenkins\Model;
 use CodedMonkey\Jenkins\Exception\ModelException;
 use CodedMonkey\Jenkins\Jenkins;
 use CodedMonkey\Jenkins\Model\Build\Build;
+use CodedMonkey\Jenkins\Model\Build\BuildInterface;
 use CodedMonkey\Jenkins\Model\Build\FreestyleBuild;
 use CodedMonkey\Jenkins\Model\Job\JobInterface;
 
@@ -20,7 +21,7 @@ class BuildFactory
         $this->jenkins = $jenkins;
     }
 
-    public function create(JobInterface $job, int $buildNumber, array $data, bool $initialized = false)
+    public function create(JobInterface $job, int $buildNumber, array $data, bool $initialized = false): BuildInterface
     {
         $type = $data['_class'] ?? false;
 

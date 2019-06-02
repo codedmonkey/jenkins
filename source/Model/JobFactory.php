@@ -10,6 +10,7 @@ use CodedMonkey\Jenkins\Jenkins;
 use CodedMonkey\Jenkins\Model\Job\FolderJob;
 use CodedMonkey\Jenkins\Model\Job\FreestyleJob;
 use CodedMonkey\Jenkins\Model\Job\Job;
+use CodedMonkey\Jenkins\Model\Job\JobInterface;
 
 class JobFactory
 {
@@ -20,7 +21,7 @@ class JobFactory
         $this->jenkins = $jenkins;
     }
 
-    public function create(array $data, bool $initialized = false)
+    public function create(array $data, bool $initialized = false): JobInterface
     {
         $type = $data['_class'] ?? false;
 

@@ -9,7 +9,7 @@ use CodedMonkey\Jenkins\Client\JobClient;
 use CodedMonkey\Jenkins\Exception\ModelException;
 use CodedMonkey\Jenkins\Jenkins;
 
-class AbstractJob implements JobInterface
+abstract class AbstractJob implements JobInterface
 {
     protected $jenkins;
 
